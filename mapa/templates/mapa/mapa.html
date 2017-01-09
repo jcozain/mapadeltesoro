@@ -30,8 +30,14 @@ var mapboxTiles = L.tileLayer('https://api.mapbox.com/v4/mapbox.light/{z}/{x}/{y
 var map = L.map('map')
     .addLayer(mapboxTiles)
     .setView([19.4, -99.15], 12);
-
-    map.on('click')
+    
+var marker= L.marker([19.4,-99.15]);
+ function onMapClick(e) {
+    marker
+        .setLatLng(e.latlng)
+        .addTo(map);
+}
+map.on('click', onMapClick);
 </script>
 
 </body>
