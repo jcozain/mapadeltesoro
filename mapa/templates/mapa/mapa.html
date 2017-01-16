@@ -1,25 +1,29 @@
-
-
+<!DOCTYPE html>
+<html>
 
 {% load geojson_tags %}
 
-<!DOCTYPE html>
-<html>
 <head>
 <meta charset=utf-8 />
 <title>Plain Leaflet API</title>
-<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
 <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet' />
 <style>
-  body { margin:0; padding:0; }
-  #map { position:absolute; top:0; bottom:0; width:500px; height: 500px;}
+  #map { float:left; width:500px; height: 500px;}
 </style>
 </head>
 <body>
 
-<div id='map'></div>
-
+<div id='map'></div> 
+<div>
+<form action="action_page.php" method="get">
+lat: <input type="number" id="lat" > long:<input type="number" id="long">
+<br>
+<br>
+Radio: <input type="range" id="radio" min="500" max="3000" value="1000" step="100">
+</form>
+</div>
 <script>
 L.mapbox.accessToken = 'pk.eyJ1Ijoic2h1eW9zbyIsImEiOiJjaXhvMzE2amIwN2tsMzNtZmx2eTg2cm03In0.Z5xLjH-xpQiZ24yUQJ27zg';
 // Replace 'mapbox.streets' with your map id.
@@ -31,12 +35,18 @@ var map = L.map('map')
     .addLayer(mapboxTiles)
     .setView([19.4, -99.15], 12);
     
-var marker= L.marker([19.4,-99.15]);
+var circle= L.circle();
  function onMapClick(e) {
-    marker
+    circle
         .setLatLng(e.latlng)
+        .setRadius($("#radio").val())
         .addTo(map);
+    $("#lat").val(e.latlng.lat);
+    $("#long").val(e.latlng.lng);
 }
+$("#radio").change(function(){
+	circle.setRadius($(this).val())
+});
 map.on('click', onMapClick);
 </script>
 
