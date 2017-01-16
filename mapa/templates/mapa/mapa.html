@@ -18,7 +18,7 @@
 <div id='map'></div> 
 <div>
 <form action="action_page.php" method="get">
-lat: <input type="number" id="lat" > long:<input type="number" id="long">
+lat: <input type="number" id="lat" value="19.4" readonly > long:<input type="number" id="long" value="-99.15" readonly>
 <br>
 <br>
 Radio: <input type="range" id="radio" min="500" max="3000" value="1000" step="100">
@@ -43,10 +43,28 @@ var circle= L.circle();
         .addTo(map);
     $("#lat").val(e.latlng.lat);
     $("#long").val(e.latlng.lng);
+    reloadpoly();
 }
 $("#radio").change(function(){
 	circle.setRadius($(this).val())
+	reloadpoly();
 });
+var myStyle = {
+    "color": "green",
+    "weight": 2,
+    "opacity": 0.5
+};
+function reloadpoly(){
+	$.get('{% url 'reload' %}',{lat:$("#lat").val(), long:$("#long").val(), radio: $("#radio").val()},"json").done( function(data){
+		var polys=[];
+		data.forEach(function(manzana){
+			polys.push(jQuery.parseJSON(manzana.poligono))
+		});
+		L.geoJSON(polys, {
+    style: myStyle
+}).addTo(map);
+	});
+}
 map.on('click', onMapClick);
 </script>
 
