@@ -1,0 +1,25 @@
+-- Function: public.manzanasporradio(numeric, numeric, numeric)
+
+-- DROP FUNCTION public.manzanasporradio(numeric, numeric, numeric);
+
+CREATE OR REPLACE FUNCTION public.manzanasporradio(
+    x numeric,
+    y numeric,
+    r numeric)
+  RETURNS json AS
+$BODY$
+import json
+data=[]
+result=plpy.execute("select st_asgeojson(st_forcerhr(geom)) as poli, pob1, gid from df_manzanas where ST_dwithin(st_geomfromtext('point("+str(x)+" "+str(y)+")',4326)::geography,geom,"+str(r)+")")
+for line in result:
+	manzana={"id":line['gid'],"poligono":line['poli'],"poblacion":line['pob1']}
+	data.append(manzana)
+
+return json.dumps(data)
+	
+$BODY$
+  LANGUAGE plpythonu VOLATILE
+  COST 100;
+ALTER FUNCTION public.manzanasporradio(numeric, numeric, numeric)
+  OWNER TO postgres;
+

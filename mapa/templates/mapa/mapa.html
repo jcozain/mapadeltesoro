@@ -7,10 +7,11 @@
 <meta charset=utf-8 />
 <title>Plain Leaflet API</title>
 <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
 <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet' />
 <style>
-  #map { float:left; width:500px; height: 500px;}
+  #map { float:left; width:800px; height: 600px;}
 </style>
 </head>
 <body>
@@ -18,10 +19,15 @@
 <div id='map'></div> 
 <div>
 <form action="action_page.php" method="get">
-lat: <input type="number" id="lat" value="19.4" readonly > long:<input type="number" id="long" value="-99.15" readonly>
+lat: <input type="number" id="lat" value="19.4" readonly > 
+<br>
+long:<input type="number" id="long" value="-99.15" readonly>
 <br>
 <br>
 Radio: <input type="range" id="radio" min="500" max="3000" value="1000" step="100">
+<br>
+<br>
+<canvas id="poblaciones" width="300" height="300"></canvas>
 </form>
 </div>
 <script>
@@ -33,8 +39,8 @@ var mapboxTiles = L.tileLayer('https://api.mapbox.com/v4/mapbox.light/{z}/{x}/{y
 
 var map = L.map('map')
     .addLayer(mapboxTiles)
-    .setView([19.4, -99.15], 12);
-    
+    .setView([19.4, -99.15], 13);
+poli=L.geoJSON()   
 var circle= L.circle();
  function onMapClick(e) {
     circle
@@ -43,10 +49,12 @@ var circle= L.circle();
         .addTo(map);
     $("#lat").val(e.latlng.lat);
     $("#long").val(e.latlng.lng);
+    poli.remove();
     reloadpoly();
 }
 $("#radio").change(function(){
 	circle.setRadius($(this).val())
+	poli.remove();
 	reloadpoly();
 });
 var myStyle = {
@@ -54,15 +62,47 @@ var myStyle = {
     "weight": 2,
     "opacity": 0.5
 };
+
+function chartify(labels,values){
+	var ctx = $("#poblaciones");
+	var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'población',
+            data: values,
+            backgroundColor:'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255,99,132,1)',
+            borderWidth: 2
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero:true
+                }
+            }]
+        }
+    }
+});
+}
+
 function reloadpoly(){
+	
 	$.get('{% url 'reload' %}',{lat:$("#lat").val(), long:$("#long").val(), radio: $("#radio").val()},"json").done( function(data){
 		var polys=[];
+		var labels=[];
+		var values=[];
 		data.forEach(function(manzana){
 			polys.push(jQuery.parseJSON(manzana.poligono))
+			labels.push(manzana.id)
+			values.push(manzana.poblacion)
 		});
-		L.geoJSON(polys, {
-    style: myStyle
-}).addTo(map);
+	poli=L.geoJSON(polys,{
+	style:myStyle}).addTo(map);
+	chartify(labels,values);
 	});
 }
 map.on('click', onMapClick);
